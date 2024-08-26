@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permainan Domino</title>
+    <style>
+        body {
+            background-color: #8B4513; /* Warna kayu untuk meja */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .video-background {  
+    position: fixed;  
+    top: 0;  
+    left: 0;  
+    width: 100%;  
+    height: 100%;  
+    overflow: hidden;  
+    z-index: -1; /* Pastikan video berada di belakang konten lainnya */  
+}  
+
+.video-background video {  
+    width: 100%;  
+    height: 100%;  
+    object-fit: cover; /* Menjaga aspek rasio video dan menutupi area */  
+}  
+
+.content {  
+    position: relative;  
+    z-index: 1; /* Memastikan konten berada di depan video */  
+    color: rgb(16, 205, 123);  
+    text-align: center;  
+    padding: 20px;  
+}  
+
+        .table {
+            background-color: #D2B48C; /* Warna permukaan meja */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .player {
+            margin: 20px;
+            padding: 10px;
+            border: 1px solid #000;
+            background-color: #FFF8DC; /* Warna latar belakang untuk pemain */
+            border-radius: 5px;
+        }
+        .player h2 {
+            margin-top: 0;
+        }
+        .domino {
+            display: inline-block;
+            margin: 5px;
+            padding: 10px;
+            border: 1px solid #000;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            cursor: grab;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); /* Bayangan pada ubin domino */
+        }
+        .domino img {
+            width: 50px;
+            height: 100px;
+        }
+        .domino:active {
+            cursor: grabbing;
+        }
+        .dropzone {
+            width: 100%;
+            height: 100px;
+            border: 2px dashed #000;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .hide {
+            display: none;
+        }
+        #winner {
+            display: none;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #FFD700;
+            border: 2px solid #000;
+            border-radius: 5px;
+        }
+        #controls {
+            margin-top: 20px;
+        }
+        #controls input {
+            margin: 5px;
+        }
+        #balance {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #betAmount {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="video-background">
+        <video autoplay muted loop>
+            <source src="domino-game-close-up-view-of-family-playing-board-games-in-living-room-on-tabl-SBV-349124207-preview (2) (online-video-cutter.com).mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <div class="table">
+        <div class="player" id="player1">
+            <h2>Pemain Atas Meja</h2>
+            <div class="domino" draggable="true"><img src="OIP (1).jpg" alt="0|6"></div>
+            <div class="domino" draggable="true"><img src="OIP (2).jpg" alt="1|3"></div>
+            <div class="domino" draggable="true"><img src="OIP (3).jpg" alt="2|6"></div>
+            <div class="domino" draggable="true"><img src="OIP (5).jpg" alt="2|2"></div>
+            <div class="domino" draggable="true"><img src="OIP (6).jpg" alt="1|4"></div>
+            <div class="domino" draggable="true"><img src="OIP (7).jpg" alt="1|1"></div>
+            <div class="domino" draggable="true"><img src="OIP (9).jpg" alt="1|6"></div>
+        </div>
+        <div class="dropzone" id="dropzone">Taruh disini</div>
+        <div class="player" id="player2">
+            <h2>Pemain Bawah Meja</h2>
+            <div class="domino" draggable="true"><img src="OIP (10).jpg" alt="0|5"></div>
+            <div class="domino" draggable="true"><img src="OIP (12).jpg" alt="1|2"></div>
+            <div class="domino" draggable="true"><img src="OIP (14).jpg" alt="2|5"></div>
+            <div class="domino" draggable="true"><img src="OIP (16).jpg" alt="3|3"></div>
+            <div class="domino" draggable="true"><img src="OIP (18).jpg" alt="4|4"></div>
+            <div class="domino" draggable="true"><img src="OIP (20).jpg" alt="5|5"></div>
+            <div class="domino" draggable="true"><img src="OIP.jpg" alt="6|6"></div>
+        </div>
+    </div>
+    <div id="controls">
+        <input type="number" id="deposit" placeholder="Deposit Amount">
+        <button onclick="deposit()">Deposit</button>
+        <input type="number" id="bet" placeholder="Bet Amount">
+        <button onclick="placeBet()">Place Bet</button>
+        <button onclick="startGame()">Start Game</button>
+    </div>
+    <div id="balance">Saldo Pemain Atas Meja: 0 | Saldo Pemain Bawah Meja: 0</div>
+    <div id="betAmount">Taruhan: 0</div>
+    <div id="winner">Pemenang: </div>
+    <script>
+        let player1Balance = 0;
+        let player2Balance = 0;
+        let betAmount = 0;
+
+        const dominos = document.querySelectorAll('.domino');
+        const dropzone = document.getElementById('dropzone');
+        const player1 = document.getElementById('player1');
+        const player2 = document.getElementById('player2');
+        const winner = document.getElementById('winner');
+        const balanceDisplay = document.getElementById('balance');
+        const betDisplay = document.getElementById('betAmount');
+
+        dominos.forEach(domino => {
+            domino.addEventListener('dragstart', dragStart);
+        });
+
+        dropzone.addEventListener('dragover', dragOver);
+        dropzone.addEventListener('drop', drop);
+
+        function dragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.innerHTML);
+            setTimeout(() => {
+                e.target.classList.add('hide');
+            }, 0);
+        }
+
+        function dragOver(e) {
+            e.preventDefault();
+        }
+
+        function drop(e) {
+            e.preventDefault();
+            const data = e.dataTransfer.getData('text/plain');
+            const newDomino = document.createElement('div');
+            newDomino.classList.add('domino');
+            newDomino.innerHTML = data;
+            dropzone.appendChild(newDomino);
+            const originalDomino = document.querySelector(`.domino.hide`);
+            originalDomino.classList.remove('hide');
+            originalDomino.remove();
+            checkWinner();
+        }
+
+        function checkWinner() {
+            if (player1.querySelectorAll('.domino').length === 0) {
+                winner.innerHTML = 'Pemenang: Pemain Atas Meja';
+                winner.style.display = 'block';
+                player1Balance += betAmount;
+                balanceDisplay.innerHTML = 'Saldo Pemain Atas Meja: ' + player1Balance + ' | Saldo Pemain Bawah Meja: ' + player2Balance;
+                alert('Pemain Atas Meja menang! Saldo Pemain Atas Meja: ' + player1Balance);
+            } else if (player2.querySelectorAll('.domino').length === 0) {
+                winner.innerHTML = 'Pemenang: Pemain Bawah Meja';
+                winner.style.display = 'block';
+                player2Balance += betAmount;
+                balanceDisplay.innerHTML = 'Saldo Pemain Atas Meja: ' + player1Balance + ' | Saldo Pemain Bawah Meja: ' + player2Balance;
+                alert('Pemain Bawah Meja menang! Saldo Pemain Bawah Meja: ' + player2Balance);
+            }
+        }
+
+        // Fungsi untuk pemain atas meja bergerak otomatis
+        function autoMove() {
+            const dominos = player1.querySelectorAll('.domino');
+            if (dominos.length > 0) {
+                const domino = dominos[0];
+                domino.classList.add('hide');
+                const newDomino = document.createElement('div');
+                newDomino.classList.add('domino');
+                newDomino.innerHTML = domino.innerHTML;
+                dropzone.appendChild(newDomino);
+                domino.remove();
+                checkWinner();
+            }
+        }
+
+        // Panggil fungsi autoMove setiap 3 detik
+        let autoMoveInterval;
+
+         // Fungsi untuk memulai permainan
+         function startGame() {
+            clearInterval(autoMoveInterval);
+            autoMoveInterval = setInterval(autoMove, 3000);
+            winner.style.display = 'none';
+            betAmount = 0;
+            balanceDisplay.innerHTML = 'Saldo Pemain Atas Meja: ' + player1Balance + ' | Saldo Pemain Bawah Meja: ' + player2Balance;
+            betDisplay.innerHTML = 'Taruhan: ' + betAmount;
+        }
+
+        // Fungsi untuk deposit
+        function deposit() {
+            const amount = parseInt(document.getElementById('deposit').value);
+            if (!isNaN(amount) && amount > 0) {
+                player1Balance += amount;
+                player2Balance += amount;
+                balanceDisplay.innerHTML = 'Saldo Pemain Atas Meja: ' + player1Balance + ' | Saldo Pemain Bawah Meja: ' + player2Balance;
+                alert('Deposit berhasil! Saldo pemain bawah meja: ' + player2Balance);
+            } else {
+                alert('Masukkan jumlah deposit yang valid.');
+            }
+        }
+
+        // Fungsi untuk taruhan
+        function placeBet() {
+            const amount = parseInt(document.getElementById('bet').value);
+            if (!isNaN(amount) && amount > 0 && amount <= player1Balance && amount <= player2Balance) {
+                player1Balance -= amount;
+                player2Balance -= amount;
+                betAmount = amount * 2; // Total taruhan yang dipertaruhkan dari kedua pemain
+                balanceDisplay.innerHTML = 'Saldo Pemain Atas Meja: ' + player1Balance + ' | Saldo Pemain Bawah Meja: ' + player2Balance;
+                betDisplay.innerHTML = 'Taruhan: ' + betAmount;
+                alert('Taruhan berhasil! Saldo pemain atas meja: ' + player1Balance + ', Saldo pemain bawah meja: ' + player2Balance);
+            } else {
+                alert('Masukkan jumlah taruhan yang valid atau saldo tidak mencukupi.');
+            }
+        }
+
+        function checkWinner() {
+            if (player1.querySelectorAll('.domino').length === 0) {
+                winner.innerHTML = 'Pemenang: Pemain Atas Meja';
+                winner.style.display = 'block';
+                player1Balance += betAmount;
+                balanceDisplay.innerHTML = 'Saldo Pemain Atas Meja: ' + player1Balance + ' | Saldo Pemain Bawah Meja: ' + player2Balance;
+                alert('Pemain Atas Meja menang! Saldo Pemain Atas Meja: ' + player1Balance);
+            } else if (player2.querySelectorAll('.domino').length === 0) {
+                winner.innerHTML = 'Pemenang: Pemain Bawah Meja';
+                winner.style.display = 'block';
+                player2Balance += betAmount;
+                balanceDisplay.innerHTML = 'Saldo Pemain Atas Meja: ' + player1Balance + ' | Saldo Pemain Bawah Meja: ' + player2Balance;
+                alert('Pemain Bawah Meja menang! Saldo Pemain Bawah Meja: ' + player2Balance);
+            }
+        }
+    </script>
+</body>
+</html>
